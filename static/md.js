@@ -12,6 +12,7 @@ let isReaderMode = false;
 let lastSaveTime = Date.now();
 let saveTimeout = null;
 let isDirty = false;
+let lastSyncedValue = '';
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', function() {
@@ -33,7 +34,7 @@ function setupEventListeners() {
       saveContent();
     }
   });
-  
+
   // Handle tab key for indentation in the editor
   markdownEditor.addEventListener('keydown', function(e) {
     if (e.key === 'Tab') {
@@ -60,6 +61,7 @@ function loadContent() {
     })
     .then(content => {
       markdownEditor.value = content;
+      lastSyncedValue = content;
       saveState(); // Initialize the undo/redo stacks with initial content
     })
     .catch(error => {
@@ -85,6 +87,7 @@ function saveContent() {
     }
     lastSaveTime = Date.now();
     isDirty = false;
+    lastSyncedValue = content;
     console.log('Content saved successfully');
   })
   .catch(error => {
@@ -183,3 +186,22 @@ function redoChange() {
     scheduleAutoSave();
   }
 }
+
+setInterval(() => {
+  if (isDirty || document.hidden) return;
+  fetch('/notepad/md.file')
+    .then(response => {
+      if (!response.ok) return null;
+      return response.text();
+    })
+    .then(content => {
+      if (content === null || content === lastSyncedValue || content === markdownEditor.value) return;
+      markdownEditor.value = content;
+      lastSyncedValue = content;
+      lastChange = content;
+      if (isReaderMode) {
+        updatePreview();
+      }
+    })
+    .catch(() => {});
+}, 5000);
