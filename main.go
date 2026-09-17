@@ -13,6 +13,8 @@ import (
 
 func main() {
 	flag.Parse()
+	loadDotEnv(".env")
+	authConfig = loadAuthConfigFromEnv()
 
 	if err := os.MkdirAll(filepath.Join("data", "files"), 0755); err != nil {
 		log.Fatal(err)
@@ -53,6 +55,8 @@ func main() {
 
 	registerHandlers()
 
+	handler := withAuth(http.DefaultServeMux)
+
 	// Start server
-	log.Fatal(http.ListenAndServe(*listenAddress, nil))
+	log.Fatal(http.ListenAndServe(*listenAddress, handler))
 }

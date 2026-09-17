@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local Content Share</title>
+    <title>memo share</title>
     <link rel="stylesheet" href="/static/fontawesome/css/all.min.css">
     <link href="/static/css/inter.css" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    
+
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#cba6f7"> <!-- mauve:dark -->
     <link rel="manifest" href="/manifest.json">
@@ -93,6 +93,13 @@
         }
         body {
             font-family: 'Inter', sans-serif;
+        }
+        .rounded-xl,
+        .rounded-2xl,
+        .rounded-3xl,
+        .rounded-4xl,
+        .rounded-full {
+            border-radius: 0 !important;
         }
     </style>
 </head>
@@ -327,7 +334,7 @@
         document.getElementById('new-link-form').addEventListener('submit', () => {
             newLinkModal.classList.add('hidden');
         });
-        
+
         // File upload and drag & drop handling
         const fileInput = document.getElementById('file-upload');
         const dropZone = fileInput.closest('label');
@@ -444,7 +451,7 @@
         renameModalBackdrop.addEventListener('click', () => renameModal.classList.add('hidden'));
         renameForm.addEventListener('submit', (e) => {
             if (!newNameInput.value) {
-                e.preventDefault(); 
+                e.preventDefault();
             }
             renameModal.classList.add('hidden');
         });
@@ -456,7 +463,7 @@
             const form = document.getElementById('new-item-form');
             form.action = `/edit/${id}`;
             form.querySelector('[name="name"]').value = filename;
-            form.querySelector('[name="name"]').disabled = true; 
+            form.querySelector('[name="name"]').disabled = true;
             form.querySelector('[name="content"]').value = content;
             form.querySelector('[name="file-upload"]').parentElement.parentElement.style.display = 'none';
             newItemModal.classList.remove('hidden');
@@ -493,7 +500,7 @@
                 buttonElement.innerHTML = originalIcon;
             }, 2000);
         }
-        
+
         // Confirmation Modal Logic
         const confirmationModal = document.getElementById('confirmation-modal');
         const confirmCancelButton = document.getElementById('confirm-cancel-button');
@@ -547,7 +554,7 @@
             try {
                 const response = await fetch(`/raw/${id}`);
                 if (!response.ok) throw new Error('Failed to fetch snippet content.');
-                
+
                 const content = await response.text();
                 contentToCopy = content;
 
