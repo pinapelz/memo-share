@@ -477,11 +477,8 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	id := strings.TrimPrefix(r.URL.Path, "/delete/")
 	// Handle link deletion
-	if after, ok := strings.CutPrefix(id, "link/"); ok {
-		linkToDelete, err := url.PathUnescape(after)
-		if err != nil {
-			linkToDelete = after
-		}
+	if linkToDelete, ok := strings.CutPrefix(id, "link/"); ok {
+		linkToDelete = strings.TrimSpace(linkToDelete)
 
 		linksFilePath := filepath.Join("data", "links.file")
 		data, err := os.ReadFile(linksFilePath)
@@ -496,10 +493,12 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 
 		for _, line := range lines {
 			record, _ := parseLinkRecordLine(line)
-			if strings.TrimSpace(record.Content) == "" {
+			recordContent := strings.TrimSpace(record.Content)
+			if recordContent == "" {
 				continue
 			}
-			if !found && strings.TrimSpace(record.Content) == strings.TrimSpace(linkToDelete) {
+
+			if !found && recordContent == linkToDelete {
 				found = true // Remove only the first occurrence
 				continue
 			}
