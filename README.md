@@ -24,6 +24,7 @@ A simple & elegant self-hosted app for **storing/sharing text snippets, files, a
 > - Polls server while on notepad page to pull in latest changes across devices
 > - Crawls and stores favicon + page title
 > - Shows snippet previews and file mimetypes
+> - Adds basic authentication
 
 
 Make sure to look into [Tips & Notes](#tips-and-notes) if you have questions about individual functionalities.
