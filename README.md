@@ -1,8 +1,7 @@
 <div align="center">
-  <img src="assets/logo.svg" alt="Local Content Share Logo" width="200">
   <h1>memo-share</h1>
-  <h2>a fork of <a href="https://github.com/Tanq16/local-content-share">local-content-share</a></h2>
----
+<h3>a fork of <a href="https://github.com/Tanq16/local-content-share">local-content-share</a></h3>
+</div>
 
 A simple & elegant self-hosted app for **storing/sharing text snippets, files, and links** in your **local network** with **no setup on client devices**. Think of this as an *all-in-one alternative* to **airdrop**, **local-pastebin**, and a **scratchpad**. The primary features are:
 
@@ -20,17 +19,20 @@ A simple & elegant self-hosted app for **storing/sharing text snippets, files, a
 - Frontend accessible via **browsers** and as a **PWA** (progressive web apps)
 - Clean, modern interface with **automatic light/dark** Catppuccin themed UI that looks good on mobile too
 
+#### This fork
+> - Adjusts CSS styling, more Material Design
+> - Polls server while on notepad page to pull in latest changes across devices
+> - Crawls and stores favicon + page title
+> - Shows snippet previews and file mimetypes
+
+
 Make sure to look into [Tips & Notes](#tips-and-notes) if you have questions about individual functionalities.
 
 > [!NOTE]
 > This application is meant to be deployed within your homelab only. There is only basic authentication implemented. If you are exposing to the public, ensure that non-destructive users using it.
 
-## Screenshots
+<img width="1187" height="625" alt="image" src="https://github.com/user-attachments/assets/617e97a9-2873-4573-b1c8-8a55254e621a" />
 
-| | Desktop View | Mobile View |
-| --- | --- | --- |
-| Light | <img src="assets/dlight.png" alt="Light"> | <img src="assets/mlight.png" alt="Light"> |
-| Dark | <img src="assets/ddark.png" alt="Dark"> | <img src="assets/mdark.png" alt="Dark"> |
 
 ## Installation and Usage
 
