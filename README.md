@@ -1,12 +1,7 @@
 <div align="center">
   <img src="assets/logo.svg" alt="Local Content Share Logo" width="200">
-  <h1>Local Content Share</h1>
-
-  <a href="https://github.com/tanq16/local-content-share/actions/workflows/binary-build.yml"><img alt="Build Workflow" src="https://github.com/tanq16/local-content-share/actions/workflows/binary-build.yml/badge.svg"></a>&nbsp;<a href="https://github.com/tanq16/local-content-share/actions/workflows/docker-publish.yml"><img alt="Container Workflow" src="https://github.com/tanq16/local-content-share/actions/workflows/docker-publish.yml/badge.svg"></a><br>
-  <a href="https://github.com/Tanq16/local-content-share/releases"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/tanq16/local-content-share"></a>&nbsp;<a href="https://hub.docker.com/r/tanq16/local-content-share"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/tanq16/local-content-share"></a><br><br>
-  <a href="#screenshots">Screenshots</a> &bull; <a href="#installation-and-usage">Install & Use</a> &bull; <a href="#tips-and-notes">Tips & Notes</a>
-</div>
-
+  <h1>memo-share</h1>
+  <h2>a fork of <a href="https://github.com/Tanq16/local-content-share">local-content-share</a></h2>
 ---
 
 A simple & elegant self-hosted app for **storing/sharing text snippets, files, and links** in your **local network** with **no setup on client devices**. Think of this as an *all-in-one alternative* to **airdrop**, **local-pastebin**, and a **scratchpad**. The primary features are:
@@ -28,7 +23,7 @@ A simple & elegant self-hosted app for **storing/sharing text snippets, files, a
 Make sure to look into [Tips & Notes](#tips-and-notes) if you have questions about individual functionalities.
 
 > [!NOTE]
-> This application is meant to be deployed within your homelab only. There is no authentication mechanism implemented. If you are exposing to the public, ensure there is authentication fronting it and non-destructive users using it.
+> This application is meant to be deployed within your homelab only. There is only basic authentication implemented. If you are exposing to the public, ensure that non-destructive users using it.
 
 ## Screenshots
 
@@ -47,10 +42,12 @@ Use `docker` CLI one liner and setup a persistence directory (so a container fai
 mkdir $HOME/.localcontentshare
 ```
 ```bash
-docker run --name local-content-share \
+docker build -t memo-share .
+docker run \
   -p 8080:8080 \
   -v $HOME/.localcontentshare:/app/data \
-  tanq16/local-content-share:main
+  -d \
+  memo-share
 ```
 
 The application will be available at `http://localhost:8080` (or your server IP).
@@ -60,33 +57,27 @@ You can also use the following compose file with container managers like Portain
 ```yaml
 services:
   contentshare:
-    image: tanq16/local-content-share:main
-    container_name: local-content-share
+    build: .
+    container_name: memo-share
     volumes:
-      - /home/tanq/lcshare:/app/data # Change as needed
+      -./data:/app/data # Change as needed
     ports:
       - 8080:8080
 ```
-
-### Using Binary
-
-Download the appropriate binary for your system from the [latest release](https://github.com/tanq16/local-content-share/releases/latest).
-
-Make the binary executable (for Linux/macOS) with `chmod +x local-content-share-*` and then run the binary with `./local-content-share-*`. The application will be available at `http://localhost:8080`.
 
 ### Local development
 
 With `Go 1.23+` installed, run the following to download the binary to your GOBIN:
 
 ```bash
-go install github.com/tanq16/local-content-share@latest
+go install github.com/pinapelz/memo-share@latest
 ```
 
 Or, you can build from source like so:
 
 ```bash
-git clone https://github.com/tanq16/local-content-share.git && \
-cd local-content-share && \
+git clone https://github.com/pinapelz/memo-share.git && \
+cd memo-share && \
 go build .
 ```
 

@@ -174,6 +174,7 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 	expiryOption := r.FormValue("expiry")
 	content := r.FormValue("content")
 	name := r.FormValue("name")
+
 	if entryType == "link" {
 		// Handle link submission
 		if content == "" {

@@ -1,3 +1,5 @@
-module github.com/tanq16/local-content-share
+module github.com/pinapelz/memo-share
 
-go 1.23.2
+go 1.26.0
+
+require golang.org/x/net v0.59.0 // indirect
