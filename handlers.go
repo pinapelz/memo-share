@@ -18,6 +18,52 @@ import (
 var tmpl *template.Template
 var staticFiles fs.FS
 
+func parseLinkRecordLine(line string) (record linkRecord, migrated bool) {
+	trimmed := strings.TrimSpace(line)
+	if trimmed == "" {
+		return linkRecord{}, false
+	}
+
+	if err := json.Unmarshal([]byte(trimmed), &record); err != nil || strings.TrimSpace(record.Content) == "" {
+		return linkRecord{Content: trimmed, Title: trimmed}, true
+	}
+
+	record.Content = strings.TrimSpace(record.Content)
+	record.Title = strings.TrimSpace(record.Title)
+	record.Favicon = strings.TrimSpace(record.Favicon)
+	if record.Title == "" {
+		record.Title = record.Content
+		return record, true
+	}
+
+	return record, false
+}
+
+func writeLinkRecords(path string, records []linkRecord) error {
+	lines := make([]string, 0, len(records))
+	for _, record := range records {
+		if strings.TrimSpace(record.Content) == "" {
+			continue
+		}
+		if strings.TrimSpace(record.Title) == "" {
+			record.Title = record.Content
+		}
+
+		payload, err := json.Marshal(record)
+		if err != nil {
+			return err
+		}
+		lines = append(lines, string(payload))
+	}
+
+	output := strings.Join(lines, "\n")
+	if output != "" {
+		output += "\n"
+	}
+
+	return os.WriteFile(path, []byte(output), 0644)
+}
+
 func registerHandlers() {
 	http.HandleFunc("/", handleHome)
 	http.HandleFunc("/md", handleMarkdown)
@@ -79,20 +125,42 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	// Read links
-	data, err := os.ReadFile(filepath.Join("data", "links.file"))
+	linksFilePath := filepath.Join("data", "links.file")
+	data, err := os.ReadFile(linksFilePath)
 	if err == nil {
-		lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+		lines := strings.Split(string(data), "\n")
+		records := make([]linkRecord, 0, len(lines))
+		needsMigration := false
+
 		for _, line := range lines {
-			line = strings.TrimSpace(line)
-			if line == "" {
+			record, migrated := parseLinkRecordLine(line)
+			if strings.TrimSpace(record.Content) == "" {
 				continue
 			}
+
+			if migrated {
+				needsMigration = true
+			}
+			records = append(records, record)
+
+			var icon *string
+			if record.Favicon != "" {
+				icon = &record.Favicon
+			}
+
 			entries = append(entries, Entry{
-				ID:       "link/" + url.PathEscape(line),
+				ID:       "link/" + url.PathEscape(record.Content),
 				Type:     "link",
-				Content:  line,
-				Filename: line,
+				Content:  record.Content,
+				Filename: record.Title,
+				Icon:     icon,
 			})
+		}
+
+		if needsMigration {
+			if err := writeLinkRecords(linksFilePath, records); err != nil {
+				log.Printf("failed to migrate links.file to json lines: %v", err)
+			}
 		}
 	}
 	tmpl.ExecuteTemplate(w, "index.html", entries)
@@ -186,6 +254,26 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid URL format. Must start with http:// or https://", http.StatusBadRequest)
 			return
 		}
+
+		// Crawl the link for title and favicon
+		title, favicon, err := getLinkInformation(content)
+		if err != nil {
+			log.Printf("Error crawling link %s: %v\n", content, err)
+			title = content
+		} else {
+			if strings.TrimSpace(title) == "" {
+				title = content
+			}
+			log.Printf("Crawled link %s: title=%s, favicon=%s\n", content, title, favicon)
+		}
+
+		record := linkRecord{Content: content, Title: title, Favicon: favicon}
+		payload, err := json.Marshal(record)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		linksFilePath := filepath.Join("data", "links.file")
 		f, err := os.OpenFile(linksFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
@@ -193,7 +281,7 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer f.Close()
-		if _, err := f.WriteString(content + "\n"); err != nil {
+		if _, err := f.WriteString(string(payload) + "\n"); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -390,35 +478,39 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/delete/")
 	// Handle link deletion
 	if after, ok := strings.CutPrefix(id, "link/"); ok {
-		linkToDelete := after
+		linkToDelete, err := url.PathUnescape(after)
+		if err != nil {
+			linkToDelete = after
+		}
+
 		linksFilePath := filepath.Join("data", "links.file")
 		data, err := os.ReadFile(linksFilePath)
 		if err != nil {
 			http.Error(w, "Failed to read links file for deletion", http.StatusInternalServerError)
 			return
 		}
+
 		lines := strings.Split(string(data), "\n")
-		var newLines []string
+		records := make([]linkRecord, 0, len(lines))
 		var found bool
+
 		for _, line := range lines {
-			if strings.TrimSpace(line) == strings.TrimSpace(linkToDelete) && !found {
+			record, _ := parseLinkRecordLine(line)
+			if strings.TrimSpace(record.Content) == "" {
+				continue
+			}
+			if !found && strings.TrimSpace(record.Content) == strings.TrimSpace(linkToDelete) {
 				found = true // Remove only the first occurrence
 				continue
 			}
-			if strings.TrimSpace(line) != "" {
-				newLines = append(newLines, line)
-			}
+			records = append(records, record)
 		}
-		output := strings.Join(newLines, "\n")
-		// Add newline for correctness
-		if output != "" {
-			output += "\n"
-		}
-		err = os.WriteFile(linksFilePath, []byte(output), 0644)
-		if err != nil {
+
+		if err := writeLinkRecords(linksFilePath, records); err != nil {
 			http.Error(w, "Failed to write links file after deletion", http.StatusInternalServerError)
 			return
 		}
+
 		notifyContentChange()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)

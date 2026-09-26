@@ -94,12 +94,34 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        .rounded-xl,
-        .rounded-2xl,
-        .rounded-3xl,
-        .rounded-4xl,
-        .rounded-full {
-            border-radius: 0 !important;
+
+        .snippet-preview-clamp {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .top-app-bar {
+            background: color-mix(in srgb, var(--base) 92%, white 8%);
+            border: 1px solid var(--surface0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 14px rgba(0, 0, 0, 0.05);
+        }
+        .section-title {
+            letter-spacing: 0.01em;
+        }
+        .item-card {
+            border: 1px solid var(--surface0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 180ms ease, border-color 180ms ease, transform 180ms ease;
+        }
+        .item-card:hover {
+            border-color: var(--surface1);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.09);
+            transform: translateY(-1px);
+        }
+        .action-pill {
+            border: 1px solid var(--surface0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
     </style>
 </head>
@@ -107,35 +129,42 @@
 
     <div class="container mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">
 
-        <header class="text-center mb-8">
-            <h1 class="text-3xl sm:text-4xl font-bold text-mauve">memo-share</h1>
-        </header>
-
-        <main class="flex flex-col gap-8">
-            <section class="w-full">
-                <div class="flex flex-wrap items-center justify-center gap-3 mb-4">
-                    <button id="new-link-button" type="button" class="flex items-center gap-2 px-4 py-2 bg-base hover:bg-surface0 rounded-xl cursor-pointer transition-colors">
+        <header class="top-app-bar rounded-2xl px-4 sm:px-5 py-3 mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="min-w-0">
+                    <h1 class="text-2xl sm:text-3xl font-semibold text-text tracking-tight">memo-share 🗒️</h1>
+                    <a class="text-xs sm:text-sm text-subtext0 hover:underline" href="https://github.com/pinapelz/memo-share">View on GitHub</a>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 sm:justify-end">
+                    <button id="new-link-button" type="button" class="action-pill flex items-center gap-2 px-4 py-2 bg-base hover:bg-surface0 rounded-xl cursor-pointer transition-colors">
                         <i class="fas fa-link text-subtext0"></i>
                         <span class="font-medium text-sm text-subtext0">Link</span>
                     </button>
-                    <button type="button" id="new-button" class="flex items-center gap-2 px-4 py-2 bg-base hover:bg-surface0 rounded-xl cursor-pointer transition-colors">
+                    <button type="button" id="new-button" class="action-pill flex items-center gap-2 px-4 py-2 bg-base hover:bg-surface0 rounded-xl cursor-pointer transition-colors">
                         <i class="fas fa-pen-nib text-subtext0"></i>
                         <span class="font-medium text-sm text-subtext0">New</span>
                     </button>
-                    <a href="/md" class="flex items-center gap-2 px-4 py-2 bg-base hover:bg-surface0 rounded-xl transition-colors no-underline">
+                    <a href="/md" class="action-pill flex items-center gap-2 px-4 py-2 bg-base hover:bg-surface0 rounded-xl transition-colors no-underline">
                         <i class="fas fa-note-sticky text-subtext0"></i>
                         <span class="font-medium text-sm text-subtext0">Notepad</span>
                     </a>
                 </div>
-            </section>
+            </div>
+        </header>
+
+        <main class="flex flex-col gap-8">
 
             <!-- Snippets Section -->
             <section class="content-section">
-                <h2 class="text-2xl font-semibold mb-4 text-center text-text">Snippets</h2>
+                <h2 class="section-title text-xl font-semibold mb-4 text-text">Snippets</h2>
                 <div id="snippets-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {{range .}}{{if eq .Type "text"}}
-                    <div class="flex items-center justify-between bg-base border border-transparent hover:border-surface1 rounded-3xl px-4 py-2 transition-colors duration-300 relative cursor-pointer" onclick="showViewModal('{{.ID}}', '{{.Filename}}')">
-                        <div class="font-medium truncate text-text mr-2">{{.Filename}}</div>
+                    <div class="item-card flex items-start justify-between bg-base rounded-2xl px-4 py-3 duration-300 relative cursor-pointer" onclick="showViewModal('{{.ID}}', '{{.Filename}}')">
+                        <div class="min-w-0 mr-2">
+                            <div class="font-medium truncate text-text">{{.Filename}}</div>
+                            <div class="snippet-preview snippet-preview-clamp text-xs text-subtext1 leading-relaxed mt-1 whitespace-pre-wrap"></div>
+                            <textarea class="snippet-markdown-source hidden" aria-hidden="true">{{.Content}}</textarea>
+                        </div>
                         <div class="flex items-center gap-0 sm:gap-1 flex-shrink-0">
                             <button onclick="event.stopPropagation(); showRenameModal('{{.ID}}', '{{.Filename}}')" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-base hover:bg-surface0 text-subtext0 rounded-full transition-colors" title="Rename"><i class="fas fa-i-cursor"></i></button>
                             <button onclick="event.stopPropagation(); showEditForm('{{.ID}}', '{{.Filename}}')" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-base hover:bg-surface0 text-subtext0 rounded-full transition-colors" title="Edit"><i class="fas fa-pen"></i></button>
@@ -149,11 +178,14 @@
 
             <!-- Files Section -->
             <section class="content-section">
-                <h2 class="text-2xl font-semibold mb-4 text-center text-text">Files</h2>
+                <h2 class="section-title text-xl font-semibold mb-4 text-text">Files</h2>
                 <div id="files-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {{range .}}{{if eq .Type "file"}}
-                    <div class="flex items-center justify-between bg-base border border-transparent hover:border-surface1 rounded-3xl px-4 py-2 transition-colors duration-300">
-                        <div class="font-medium truncate text-text mr-2">{{.Filename}}</div>
+                    <div class="item-card flex items-start justify-between bg-base rounded-2xl px-4 py-3 duration-300">
+                        <div class="min-w-0 mr-2">
+                            <div class="font-medium truncate text-text">{{.Filename}}</div>
+                            <div class="file-mime-type text-xs text-overlay1 mt-1" data-filename="{{.Filename}}"></div>
+                        </div>
                         <div class="flex items-center gap-0 sm:gap-1 flex-shrink-0">
                             <button onclick="event.stopPropagation(); showRenameModal('{{.ID}}', '{{.Filename}}')" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-base hover:bg-surface0 text-subtext0 rounded-full transition-colors" title="Rename"><i class="fas fa-i-cursor"></i></button>
                             <a href="/download/{{.ID}}" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-base hover:bg-surface0 text-subtext0 rounded-full transition-colors no-underline" title="Download"><i class="fas fa-download"></i></a>
@@ -167,12 +199,22 @@
 
             <!-- Links Section -->
             <section class="content-section">
-                <h2 class="text-2xl font-semibold mb-4 text-center text-text">Links</h2>
+                <h2 class="section-title text-xl font-semibold mb-4 text-text">Links</h2>
                 <div id="links-list" class="flex flex-col gap-2">
                     {{range .}}{{if eq .Type "link"}}
-                    <a href="{{.Content}}" target="_blank" rel="noopener noreferrer" class="block bg-base border border-transparent hover:border-surface1 rounded-3xl px-4 py-2 transition-colors duration-300 no-underline group">
-                        <div class="flex items-center justify-between">
-                            <div class="font-medium truncate text-text mr-2">{{.Content}}</div>
+                    <a href="{{.Content}}" target="_blank" rel="noopener noreferrer" class="item-card block bg-base rounded-2xl px-4 py-2 duration-300 no-underline group">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="min-w-0 flex items-start gap-3">
+                                {{if .Icon}}
+                                <img src="{{.Icon}}" alt="favicon" class="w-4 h-4 mt-1 rounded-sm flex-shrink-0" loading="lazy">
+                                {{else}}
+                                <span class="w-4 h-4 mt-1 flex items-center justify-center text-overlay1 flex-shrink-0"><i class="fas fa-link text-xs"></i></span>
+                                {{end}}
+                                <div class="min-w-0">
+                                    <div class="font-medium truncate text-text">{{.Filename}}</div>
+                                    <div class="text-xs text-overlay1 truncate">{{.Content}}</div>
+                                </div>
+                            </div>
                             <div class="flex items-center gap-0 sm:gap-1 flex-shrink-0">
                                 <button onclick="event.preventDefault(); event.stopPropagation(); copyToClipboard('{{.Content}}', this)" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-base hover:bg-surface0 text-subtext0 rounded-full transition-colors" title="Copy"><i class="fas fa-copy"></i></button>
                                 <button onclick="event.preventDefault(); event.stopPropagation(); deleteItem('{{.ID}}')" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-base hover:bg-surface0 text-subtext0 rounded-full transition-colors" title="Delete"><i class="fas fa-trash"></i></button>
@@ -299,6 +341,33 @@
         const progressContainer = document.getElementById('progress-container');
         const progressBar = document.getElementById('progress-bar');
 
+        function renderSnippetPreview(content, maxChars = 220) {
+            const normalized = (content || '').trim();
+            if (normalized.length > maxChars) {
+                return `${normalized.slice(0, maxChars)}…`;
+            }
+            return normalized;
+        }
+
+        function mimeTypeFromFilename(filename) {
+            const ext = (filename.split('.').pop() || '').toLowerCase();
+            const mimeMap = {
+                txt: 'text/plain', md: 'text/markdown', markdown: 'text/markdown',
+                html: 'text/html', htm: 'text/html', css: 'text/css', js: 'application/javascript',
+                json: 'application/json', xml: 'application/xml', csv: 'text/csv',
+                jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif',
+                webp: 'image/webp', svg: 'image/svg+xml', bmp: 'image/bmp',
+                mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg',
+                mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
+                pdf: 'application/pdf', zip: 'application/zip', gz: 'application/gzip',
+                tar: 'application/x-tar', rar: 'application/vnd.rar',
+                doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                xls: 'application/vnd.ms-excel', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                ppt: 'application/vnd.ms-powerpoint', pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+            };
+            return mimeMap[ext] || 'application/octet-stream';
+        }
+
         // Reset the New Item modal
         function closeAndResetNewItemModal() {
             const form = document.getElementById('new-item-form');
@@ -423,6 +492,7 @@
                     expiryValueInput.value = expiryOptions[0];
                 }
             }).catch(error => console.error('Error fetching expiry options:', error));
+
             // Reverse the order so newest are on top
             const linksList = document.getElementById('links-list');
             if (linksList) {
@@ -430,6 +500,15 @@
                 links.reverse();
                 links.forEach(link => linksList.appendChild(link));
             }
+
+            document.querySelectorAll('.snippet-preview').forEach(preview => {
+                const source = preview.parentElement.querySelector('.snippet-markdown-source')?.value || '';
+                preview.textContent = renderSnippetPreview(source);
+            });
+
+            document.querySelectorAll('.file-mime-type[data-filename]').forEach(mimeEl => {
+                mimeEl.textContent = mimeTypeFromFilename(mimeEl.dataset.filename || '');
+            });
         });
 
         // Rename Modal Logic
